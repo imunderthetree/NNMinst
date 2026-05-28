@@ -1,6 +1,6 @@
-# NMIST Digit Recognition
+# NNMINST Digit Recognition
 
-NMIST is an end-to-end Arabic handwritten digit recognition project. It trains a
+NNMINST is an end-to-end Arabic handwritten digit recognition project. It trains a
 TensorFlow/Keras MLP classifier on the MAHDBase dataset, exports the model to
 TensorFlow Lite, and runs inference inside a Flutter app for camera, gallery, and
 drawing-canvas input.
@@ -18,7 +18,7 @@ Live demo: https://nnminst.netlify.app/
 
 ## Reported model performance
 
-Values below follow `NMIST_Report_final.pdf` as the project source of truth.
+Values below follow `NNMINST_Report_final.pdf` as the project source of truth.
 
 | Item | Value |
 | --- | --- |
