@@ -1,6 +1,6 @@
 # NNMINST - Arabic Digit Recognition (MAHDBase)
 
-[![GitHub stars](https://img.shields.io/github/stars/imunderthetree/NNMinst?style=social)](https://github.com/imunderthetree/NNMinst/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/imunderthetree/NNMinst?style=social)](https://github.com/imunderthetree/NNMinst)
 ![Views](https://visitor-badge.laobi.icu/badge?page_id=imunderthetree.NNMinst)
 
 NNMINST is an end-to-end project for Arabic handwritten digit recognition using
