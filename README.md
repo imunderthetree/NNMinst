@@ -1,61 +1,103 @@
-# NNMINST - Arabic Digit Recognition (MAHDBase)
+# NMIST Digit Recognition
 
-[![GitHub stars](https://img.shields.io/github/stars/imunderthetree/NNMinst?style=social)](https://github.com/imunderthetree/NNMinst)
-![Views](https://visitor-badge.laobi.icu/badge?page_id=imunderthetree.NNMinst)
-
-NNMINST is an end-to-end project for Arabic handwritten digit recognition using
-the MAHDBase dataset. It includes training code, exported models (Keras and
-TFLite), and a Flutter app that detects and classifies multiple digits in a
-single image or drawing.
+NMIST is an end-to-end Arabic handwritten digit recognition project. It trains a
+TensorFlow/Keras MLP classifier on the MAHDBase dataset, exports the model to
+TensorFlow Lite, and runs inference inside a Flutter app for camera, gallery, and
+drawing-canvas input.
 
 Live demo: https://nnminst.netlify.app/
 
-## Features
+## Highlights
 
-- On-device inference with a bundled TFLite model
-- Camera, gallery, and drawing input
-- Multi-digit detection by segmenting regions and classifying each crop
-- Output sequence plus per-digit confidence breakdown
-- Clean Flutter UI with Settings and About screens
+- Arabic handwritten digit recognition for classes `0-9`
+- On-device inference with a bundled TensorFlow Lite model
+- Camera, gallery, and drawing input modes
+- Multi-digit prediction through classical image segmentation plus per-crop
+  classification
+- Output sequence with per-digit confidence details
 
-## Model accuracy
+## Reported model performance
 
-Measured in `training/nnminst.ipynb` on the MAHDBase splits:
+Values below follow `NMIST_Report_final.pdf` as the project source of truth.
 
-- Validation accuracy: 99.38%
-- Test accuracy: 99.58%
+| Item | Value |
+| --- | --- |
+| Dataset | MAHDBase, 60,000 BMP images |
+| Classes | 10 digits, `0-9` |
+| Split | 48,000 train / 6,000 validation / 6,000 test |
+| Model | `mahdbase_mlp_v2` |
+| Input | `64 x 64 x 1` grayscale image |
+| Validation accuracy | 99.15% |
+| Test accuracy | 99.20% |
+| Deployment artifact | `model.tflite`, about 4.9 MB |
 
 ## Tech stack
 
-- Flutter + Dart (mobile app)
-- TensorFlow + Keras (training)
-- TensorFlow Lite (on-device inference)
-- Python + NumPy + scikit-learn (training pipeline)
-- MAHDBase dataset
+- Python, TensorFlow, and Keras for model training
+- TensorFlow Lite for mobile deployment
+- Flutter and Dart for the app
+- `tflite_flutter` for on-device inference
+- Dart `image` package for preprocessing and segmentation
+- MAHDBase handwritten Arabic digit dataset
 
-## How it works
+## Dataset and preprocessing
 
-1. Detect ink regions in the input image or drawing using adaptive thresholding
-	 and connected-components filtering.
-2. Crop each detected region and normalize it to the model input size.
-3. Run the TFLite classifier on each crop.
-4. Sort boxes by reading order and display the predicted sequence.
+The training pipeline recursively scans the MAHDBase files for names matching
+`digit[0-9].bmp`. Each image is decoded, converted from RGB to grayscale using
+standard luminance, normalized to `float32` in the `[0.0, 1.0]` range, padded to
+a square while preserving aspect ratio, and resized to `64 x 64`.
+
+The polarity convention is preserved throughout training and inference: dark ink
+on a white background.
+
+## Model architecture
+
+`mahdbase_mlp_v2` is a compact fully connected MLP designed for mobile CPU
+inference:
+
+1. Input: `64 x 64 x 1`
+2. Flatten: 4,096 features
+3. Dense blocks: 1024, 512, 256, and 128 units
+4. Batch normalization and ReLU activation in hidden layers
+5. Dropout tapered across the wider layers
+6. Output: 10-way softmax for digit classes `0-9`
+
+Training used sparse categorical cross-entropy with Adam. The report records
+training stopping at epoch 15 after reaching the validation-accuracy target, with
+early stopping and learning-rate reduction used to control overfitting.
+
+## Flutter segmentation pipeline
+
+The Flutter app uses the TFLite model as a single-digit classifier. Multi-digit
+recognition is produced by the app's preprocessing and segmentation pipeline:
+
+1. Decode the selected image and bake orientation.
+2. Detect a paper region in camera mode when possible.
+3. Extract luminance and run a global Otsu sanity check.
+4. Apply adaptive local Otsu thresholding for uneven lighting.
+5. Find connected components with BFS flood fill.
+6. Merge and filter candidate digit boxes.
+7. Expand each crop, resize to `64 x 64`, convert to a tensor, and run TFLite
+   inference.
+
+Drawing mode groups nearby strokes, rasterizes them into the same `64 x 64`
+input format, and feeds the tensor directly into the model.
 
 ## Repository layout
 
-```
-flutter_app/   Flutter mobile app (camera, gallery, draw input)
-models/        Model exports (Keras + TFLite) and metadata
-training/      Training notebook + helper script
+```text
+flutter_app/   Flutter app for camera, gallery, and drawing input
+models/        Exported Keras model, TFLite model, and metadata
+training/      Model training notebook
 ```
 
-## Quick start (Flutter app)
+## Quick start: Flutter app
 
 Requirements:
 
-- Flutter 3.7+ (Dart 3.7)
+- Flutter 3.7+ with Dart 3.7+
 
-Run:
+Run the app:
 
 ```bash
 cd flutter_app
@@ -70,9 +112,10 @@ cd flutter_app
 flutter build apk
 ```
 
-## Dataset (not included)
+## Dataset
 
-Download MAHDBase from the AUC dataset page and extract it into `data/`:
+The MAHDBase dataset is not included in this repository. Download it from the AUC
+dataset page and extract it into `data/`:
 
 - MAHDBase training set: https://datacenter.aucegypt.edu/shazeem/Files/MAHDBase_TrainingSet.rar
 - MAHDBase testing set: https://datacenter.aucegypt.edu/shazeem/Files/MAHDBase_TestingSet.rar
@@ -80,7 +123,7 @@ Download MAHDBase from the AUC dataset page and extract it into `data/`:
 
 Expected layout:
 
-```
+```text
 data/MAHDBase_TrainingSet/Part01/writer001_pass01_digit0.bmp
 ...
 data/MAHDBase_TrainingSet/Part12/*.bmp
@@ -88,7 +131,7 @@ data/MAHDBase_TrainingSet/Part12/*.bmp
 
 ## Train and export
 
-Install dependencies:
+Install the Python dependencies:
 
 ```bash
 python -m pip install tensorflow pillow matplotlib numpy scikit-learn
@@ -96,26 +139,19 @@ python -m pip install tensorflow pillow matplotlib numpy scikit-learn
 
 Run the notebook:
 
-```
+```text
 training/nnminst.ipynb
 ```
 
-Or run the helper script:
+The checked-in model artifacts are:
 
-```bash
-python training/train_notebook_model.py
-```
-
-Outputs are saved to `models/`:
-
-```
+```text
 models/model.keras
-models/best_model.keras
 models/model.tflite
 models/model_meta.json
 ```
 
-If you retrain, update the Flutter asset with:
+If you retrain and export a new TFLite model, update the Flutter asset:
 
 ```powershell
 copy models\model.tflite flutter_app\assets\model.tflite
@@ -123,17 +159,21 @@ copy models\model.tflite flutter_app\assets\model.tflite
 
 ## Model contract
 
-- Input shape: [1, 64, 64, 1]
-- Input type: float32
-- Normalization: grayscale / 255.0 (dark ink on white)
-- Output shape: [1, 10]
+- Input shape: `[1, 64, 64, 1]`
+- Input type: `float32`
+- Normalization: luminance in `[0.0, 1.0]`
+- Polarity: dark ink on white background
+- Output shape: `[1, 10]`
+- Output meaning: softmax probabilities for digit classes `0-9`
 
-## Notes
+## Notes and limitations
 
-- The exported model is a single-digit classifier. Multi-digit output is
-	produced by the app's detector and cropper.
-- Touching digits may be detected as a single region; leave spacing for best
-	results.
+- The TFLite model classifies one digit at a time; multi-digit output comes from
+  app-side detection, cropping, and sorting.
+- Touching digits may be detected as one region, so spacing improves results.
+- Photo quality matters. Strong shadows, oblique angles, or low contrast can
+  reduce segmentation quality even when the classifier performs well on clean
+  crops.
 
 ## License
 
