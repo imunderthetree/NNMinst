@@ -1,16 +1,45 @@
 # NNMINST - Arabic Digit Recognition (MAHDBase)
 
+[![GitHub stars](https://img.shields.io/github/stars/imunderthetree/NNMinst?style=social)](https://github.com/imunderthetree/NNMinst/stargazers)
+![Views](https://visitor-badge.laobi.icu/badge?page_id=imunderthetree.NNMinst)
+
 NNMINST is an end-to-end project for Arabic handwritten digit recognition using
 the MAHDBase dataset. It includes training code, exported models (Keras and
-TFLite), and a Flutter mobile app that detects and classifies multiple digits in
-a single image or drawing.
+TFLite), and a Flutter app that detects and classifies multiple digits in a
+single image or drawing.
 
-## Highlights
+Live demo: https://nnminst.netlify.app/
+
+## Features
 
 - On-device inference with a bundled TFLite model
 - Camera, gallery, and drawing input
 - Multi-digit detection by segmenting regions and classifying each crop
+- Output sequence plus per-digit confidence breakdown
 - Clean Flutter UI with Settings and About screens
+
+## Model accuracy
+
+Measured in `training/nnminst.ipynb` on the MAHDBase splits:
+
+- Validation accuracy: 99.38%
+- Test accuracy: 99.58%
+
+## Tech stack
+
+- Flutter + Dart (mobile app)
+- TensorFlow + Keras (training)
+- TensorFlow Lite (on-device inference)
+- Python + NumPy + scikit-learn (training pipeline)
+- MAHDBase dataset
+
+## How it works
+
+1. Detect ink regions in the input image or drawing using adaptive thresholding
+	 and connected-components filtering.
+2. Crop each detected region and normalize it to the model input size.
+3. Run the TFLite classifier on each crop.
+4. Sort boxes by reading order and display the predicted sequence.
 
 ## Repository layout
 
@@ -22,10 +51,23 @@ training/      Training notebook + helper script
 
 ## Quick start (Flutter app)
 
+Requirements:
+
+- Flutter 3.7+ (Dart 3.7)
+
+Run:
+
 ```bash
 cd flutter_app
 flutter pub get
 flutter run
+```
+
+Build a release APK:
+
+```bash
+cd flutter_app
+flutter build apk
 ```
 
 ## Dataset (not included)
