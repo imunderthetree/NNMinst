@@ -1,19 +1,31 @@
-# NNMinst — Arabic Digit Recognition (MAHDBase)
+# NNMINST - Arabic Digit Recognition (MAHDBase)
 
-NNMinst is an end-to-end pipeline for Arabic handwritten digit recognition using the MAHDBase dataset, exported to TFLite and deployed in a Flutter app that can detect and classify multiple digits in a single image.
+NNMINST is an end-to-end project for Arabic handwritten digit recognition using
+the MAHDBase dataset. It includes training code, exported models (Keras and
+TFLite), and a Flutter mobile app that detects and classifies multiple digits in
+a single image or drawing.
 
-## What this project includes
+## Highlights
 
-- Training notebook and script for MAHDBase
-- Exported Keras and TFLite models
-- Flutter app with multi-digit detection + on-device inference
+- On-device inference with a bundled TFLite model
+- Camera, gallery, and drawing input
+- Multi-digit detection by segmenting regions and classifying each crop
+- Clean Flutter UI with Settings and About screens
 
 ## Repository layout
 
 ```
-flutter_app/   Flutter mobile app (camera, gallery, and draw input)
-models/        Latest model exports (Keras + TFLite) and metadata
+flutter_app/   Flutter mobile app (camera, gallery, draw input)
+models/        Model exports (Keras + TFLite) and metadata
 training/      Training notebook + helper script
+```
+
+## Quick start (Flutter app)
+
+```bash
+cd flutter_app
+flutter pub get
+flutter run
 ```
 
 ## Dataset (not included)
@@ -42,7 +54,7 @@ python -m pip install tensorflow pillow matplotlib numpy scikit-learn
 
 Run the notebook:
 
-```text
+```
 training/nnminst.ipynb
 ```
 
@@ -63,35 +75,23 @@ models/model_meta.json
 
 If you retrain, update the Flutter asset with:
 
-```bash
+```powershell
 copy models\model.tflite flutter_app\assets\model.tflite
 ```
 
-## Flutter app
-
-```bash
-cd flutter_app
-flutter pub get
-flutter run
-```
-
-The app supports:
-
-- Camera and gallery input
-- Drawing multiple digits on a canvas
-- Multi-digit detection by segmenting regions and classifying each crop
-
 ## Model contract
 
-- Input shape: `[1, 64, 64, 1]`
-- Input type: `float32`
-- Normalization: grayscale `/ 255.0` (dark ink on white)
-- Output shape: `[1, 10]`
+- Input shape: [1, 64, 64, 1]
+- Input type: float32
+- Normalization: grayscale / 255.0 (dark ink on white)
+- Output shape: [1, 10]
 
 ## Notes
 
-- The exported model is a single-digit classifier. Multi-digit output is created by the app’s detector and cropper.
-- Touching digits may be detected as a single region; leave spacing for best results.
+- The exported model is a single-digit classifier. Multi-digit output is
+	produced by the app's detector and cropper.
+- Touching digits may be detected as a single region; leave spacing for best
+	results.
 
 ## License
 
